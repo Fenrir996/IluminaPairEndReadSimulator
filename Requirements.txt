@@ -15,7 +15,7 @@ Testiranje :
 	Na izlazu dobijamo SAM i radimo poredjenje na pozicije alajnmenta u nasem i njihovom SAM-u
 	Rezultate prikazati na osnovu metrika (precision, recall, fscore, AUC)
 	Za test koristiti 3 genoma po izboru (neke zivotinje ili biljke) iz NIH baze
-	Napisati test slucaj za testiranje samog simulatora na pocetku*********
+	Napisati test slucaj za testiranje samog simulatora na pocetku (check)
 	
 Finally : 
 	PPTX i video prezentaciju od 5 minuta trajanja na yt
