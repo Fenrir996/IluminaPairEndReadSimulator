@@ -3,13 +3,137 @@ import numpy
 
 qualities_in_ascii = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 bases = ['A', 'T', 'C', 'G']
-complementary_bases = {
-    "A": "T",
-    "C": "G",
-    "T": "A",
-    "G": "C"
-}
 
+#FASTA format
+#>gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
+#MNSERSDVTLYQPFLDYAIAYMRSRLDLEPYPIPTGFESNSAVVGKGKNQEEVVTTSYAFQTAKLRQIRA -> nucleotides
+#AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
+#QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
+#LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
+
+def change_into_base(nucleotide):
+    number = random.randint(0, 100)
+
+    if nucleotide == 'R':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'A'
+
+    if nucleotide == 'Y':
+        rng = number % 2
+        if rng == 0:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'K':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'T'
+
+    if nucleotide == 'M':
+        rng = number % 2
+        if rng == 0:
+            return 'C'
+        else:
+            return 'A'
+
+    if nucleotide == 'S':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'C'
+
+    if nucleotide == 'W':
+        rng = number % 2
+        if rng == 0:
+            return 'T'
+        else:
+            return 'A'
+
+    if nucleotide == 'B':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'D':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'A'
+
+    if nucleotide == 'H':
+        rng = number % 3
+        if rng == 0:
+            return 'A'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'V':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'A'
+        else:
+            return 'C'
+
+    if nucleotide == 'N':
+        rng = number % 4
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        elif rng == 2:
+            return 'C'
+        else:
+            return 'A'
+
+def create_reverse_complement_genome(genome):
+    complementary_bases = {
+        "A": "T",
+        "C": "G",
+        "T": "A",
+        "G": "C"
+    }
+    result = ''
+    for nucleotide in genome:
+        result = complementary_bases[nucleotide] + result
+    return result
+
+def read_genome_from_fasta_file(file_name):
+    file = open(file_name, 'r')
+    lines = file.readlines()
+    genome = ''
+
+    for line in lines:
+        #  in case of multiple sequences
+        if line[0] != '>':
+            genome += line.strip()
+
+    file.close()
+    # need to make a base nucleotide if some of them aren't
+    index = 0
+    for char in genome:
+        if char not in bases:
+            genome[index] = change_into_base[char]
+        index += 1
+
+    return genome.upper()
 
 # sigma should probably be 1.0, mean 60-80
 def create_qualities_by_normal_distribution(length, mean, sigma):
