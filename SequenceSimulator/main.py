@@ -143,13 +143,14 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
     quality_values = numpy.random.normal(mean, sigma, length)
     qualities = ''
     for value in quality_values:
-        if chr(value) in qualities_in_ascii:
-            quality = value
+        int_val = int(value)
+        if chr(int_val) in qualities_in_ascii:
+            quality = int_val
         else:
-            if ord('!') > value > 0:
+            if ord('!') > int_val > 0:
                 quality = ord('!')
             else:
-                if value > ord('~'):
+                if int_val > ord('~'):
                     quality = ord('~')
                 else:
                     raise ValueError("Quality can't be negative, something bad happened with Normal distribution")
@@ -194,3 +195,6 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         number_of_deletions -= 1
 
     return reference_genome
+
+
+
