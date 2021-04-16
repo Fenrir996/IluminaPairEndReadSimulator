@@ -173,28 +173,35 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
 
     while number_of_variations > 0:
         variation_index = random.randint(0, genome_length)
+        print(variation_index)
         base_index = random.randint(0, 100) % 4
         while base_index == bases.index(reference_genome[variation_index]):
             base_index = random.randint(0, 100) % 4
-        reference_genome[variation_index] = bases[base_index]
+        reference_genome_pre = reference_genome[0:variation_index]
+        reference_genome_post = reference_genome[variation_index+1:genome_length]
+        reference_genome = reference_genome_pre + bases[base_index] + reference_genome_post
         number_of_variations -= 1
     # introduce insertion of singular nucleotides
 
     while number_of_insertions > 0:
         insertion_index = random.randint(0, genome_length)
+        print(insertion_index)
         base_index = random.randint(0, 100) % 4
-        reference_genome.insert(insertion_index, bases[base_index])
+        reference_genome_pre = reference_genome[0:insertion_index]
+        reference_genome_post = reference_genome[insertion_index:genome_length]
+        reference_genome = reference_genome_pre + bases[base_index] + reference_genome_post
         genome_length += 1
         number_of_insertions -= 1
 
     # introduce deletion of singular nucleotides
     while number_of_deletions > 0:
         deletion_index = random.randint(0, genome_length)
-        del reference_genome[deletion_index]
+        print(deletion_index)
+        reference_genome_pre = reference_genome[0:deletion_index]
+        reference_genome_post = reference_genome[deletion_index+1:genome_length]
+        reference_genome = reference_genome_pre + reference_genome_post
         genome_length -= 1
         number_of_deletions -= 1
 
     return reference_genome
-
-
 
