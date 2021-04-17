@@ -1,9 +1,18 @@
 import random
 import numpy
 
+NORMAL_DIST_SIGMA = 2
+LEFT = 1
+RIGHT = 2
+
 qualities_in_ascii = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 bases = ['A', 'T', 'C', 'G']
 
+# @read_id#read_direction(1 - right, 2 - left)
+# read
+# +
+# qualities
+fastq_entry = "@{}#{}\n{}\n+\n{}\n"
 
 # FASTA format
 # >gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
@@ -210,3 +219,56 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
 
     return reference_genome
 
+
+def generate_read(ref_genome, read_start, read_end, direction):
+    read = ref_genome[read_start:read_end];
+    if (direction == RIGHT):
+        read = create_reverse_complement_genome(read)
+    return read
+
+
+def generate_reads(gen_read_data):
+    fastq1 = open("read1.fastq", "w");
+    fastq2 = open("read2.fastq", "w");
+
+    for i in range(gen_read_data["num_of_reads"]):
+        read_id = gen_read_data["file_name"] + "_" + str(i)
+
+        qualities1 = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],                                         NORMAL_DIST_SIGMA)
+        read1_start = random(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
+        read1_finish = read1_start + gen_read_data["read_size"]
+        read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
+        fastq1.write(fastq_entry.format(read_id, LEFT, read1, qualities1));
+
+        qualities2 = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],                                                  NORMAL_DIST_SIGMA)
+        read2_end = read1_start + gen_read_data["insert_size"]
+        read2_start = read2_end - gen_read_data["read_size"]
+        read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
+        fastq2.write(fastq_entry.format(read_id, RIGHT, read2, qualities2))
+
+
+def simulate(ref_genome_file, quality, coverage, read_size, insert_size, snv_error, add_error, del_error):
+    #validate parameters
+
+    ref_genome = read_genome_from_fasta_file(ref_genome_file)
+
+    num_of_reads = int(coverage * len(ref_genome) / read_size);
+
+    gen_read_data = {
+        "ref_genome" : ref_genome,
+        "quality" : quality,
+        "del_error" : del_error,
+        "read_size" : read_size,
+        "insert_size" : insert_size,
+        "snv_error" : snv_error,
+        "add_error" : add_error,
+        "del_error" : del_error,
+        "num_of_reads" : num_of_reads,
+        "file_name" : ref_genome_file.split(".")[0],
+        "ref_genome_size" : len(ref_genome)
+    }
+
+    generate_reads(gen_read_data)
+
+
+simulate("test.fa", 70, 4, 150, 500, 0, 0, 0)
