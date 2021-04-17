@@ -143,16 +143,14 @@ def read_genome_from_fasta_file(file_name):
             genome.extend(list(line.rstrip('\n')))
 
     file.close()
-    # need to make a base nucleotide if some of them aren't
-   # genome_length = len(genome)
-   # new_genome = ''
-    #for index in range(genome_length):
-     #   if genome[index] not in bases:
-      #      pre_genome = genome[0:index]
-       #     post_genome = genome[index + 1:genome_length]
-        #    new_base = change_into_base(genome[index])
-         #   genome = pre_genome + new_base + post_genome
 
+    # need to make a base nucleotide if some of them aren't
+    genome_length = len(genome)
+    for index in range(genome_length):
+        if genome[index] not in bases:
+            new_base = change_into_base(genome[index])
+            genome[index] = new_base
+    
     return ''.join(genome).upper()
 
 
