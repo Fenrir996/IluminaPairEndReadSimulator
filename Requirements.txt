@@ -3,7 +3,7 @@ Ulaz :
 	prosecan kvalitet nukleotida,
 	pokrivenost,
 	duzina reada,
-	insert size,
+	insert size - velicina fragmenta,
 	error rate - vrv pojave pogresnog nukleotida u svakom od readova i posebno za snipove (single nucleotid variation) = ErrorRateInsertion & ErrorRateDeletion
 
 Izlaz :

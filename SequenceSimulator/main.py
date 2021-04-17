@@ -1,4 +1,6 @@
 import random
+import time
+
 import numpy
 
 NORMAL_DIST_SIGMA = 2
@@ -160,11 +162,11 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
         if chr(int_val) in qualities_in_ascii:
             quality = int_val
         else:
-            if ord('!') > int_val > 0:
-                quality = ord('!')
+            if int(33) > int_val > int(0):
+                quality = int(33)
             else:
-                if int_val > ord('~'):
-                    quality = ord('~')
+                if int_val > int(126):
+                    quality = int(126)
                 else:
                     raise ValueError("Quality can't be negative, something bad happened with Normal distribution")
 
@@ -174,7 +176,6 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
 
 
 # keep error rates under 0.01 eg. 0.001, 0.005, 0.009
-
 
 def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_error_rate):
     genome_length = len(reference_genome)
@@ -216,26 +217,114 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         genome_length -= 1
         number_of_deletions -= 1
 
+    return list(reference_genome)
 
-    return reference_genome
+
+def check_positive_value(value):
+    if value < 0:
+        return 0
+    return 1
+
+
+def check_coverage(coverage):
+    if coverage < 0:
+        return 0
+    return 1
+
+
+def check_errors_values(error):
+    if error < 0 or error > 1:
+        return 0
+    return 1
+
+
+def check_quality(average_quality):
+    if average_quality < int(33) or average_quality > int(126):
+        return 0
+    return 1
+
+
+def sequence_simulator(file, average_quality, coverage, read_size, insert_size, delete_error_rate,
+                       insert_error_rate, snv_error_rate):
+    start_time = time.time()
+
+    if file:
+        print('Reference genome mast be defined!')
+        return
+
+    if check_quality(average_quality) == 1:
+        print('Quality mast be between 33 and 126')
+        return
+
+    if check_coverage(coverage) == 1:
+        print('Coverage mast be positive number')
+        return
+
+    if check_positive_value(read_size) == 1:
+        print('Read size mast be positive number')
+        return
+
+    if check_positive_value(insert_size) == 1:
+        print('Insert size mast be positive number')
+        return
+
+    if read_size > insert_size:
+        print('Read size can not be longer than insert size (size of the fragment of the genome)')
+        return
+
+    if check_errors_values(delete_error_rate):
+        print('Delete error mast be value between 0 and 1')
+        return
+
+    if check_errors_values(insert_error_rate):
+        print('Insert error mast be value between 0 and 1')
+        return
+
+    if check_errors_values(snv_error_rate):
+        print('SNV error mast be value between 0 and 1')
+        return
+
+    if delete_error_rate + insert_error_rate + snv_error_rate > 1:
+        print('Sum of error can not be greater than 1')
+        return
+
+    referent_genome = read_genome_from_fasta_file(file)
+
+    gen_read_data = {
+        "ref_genome": referent_genome,
+        "quality": average_quality,
+        "read_size": read_size,
+        "insert_size": insert_size,
+        "snv_error": snv_error_rate,
+        "add_error": insert_error_rate,
+        "del_error": delete_error_rate,
+        "num_of_reads": int(coverage * len(referent_genome) / read_size),
+        "file_name": file.split(".")[0],
+        "ref_genome_size": len(referent_genome)
+    }
+
+    generate_reads(gen_read_data)
+
+    end_time = time.time()
+    print("Sequencing finished. Time elapsed: {}".format(end_time - start_time))
 
 
 def generate_read(ref_genome, read_start, read_end, direction):
-    read = ref_genome[read_start:read_end];
-    if (direction == RIGHT):
+    read = ref_genome[read_start:read_end]
+    if direction == RIGHT:
         read = create_reverse_complement_genome(read)
     return read
 
 
 def generate_reads(gen_read_data):
-    fastq1 = open("read1.fastq", "w");
-    fastq2 = open("read2.fastq", "w");
+    fastq1 = open("read1.fastq", "w")
+    fastq2 = open("read2.fastq", "w")
 
     for i in range(gen_read_data["num_of_reads"]):
         read_id = gen_read_data["file_name"] + "_" + str(i)
 
         qualities1 = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],                                         NORMAL_DIST_SIGMA)
-        read1_start = random(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
+        read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
         read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
         fastq1.write(fastq_entry.format(read_id, LEFT, read1, qualities1));
@@ -247,28 +336,4 @@ def generate_reads(gen_read_data):
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, qualities2))
 
 
-def simulate(ref_genome_file, quality, coverage, read_size, insert_size, snv_error, add_error, del_error):
-    #validate parameters
-
-    ref_genome = read_genome_from_fasta_file(ref_genome_file)
-
-    num_of_reads = int(coverage * len(ref_genome) / read_size);
-
-    gen_read_data = {
-        "ref_genome" : ref_genome,
-        "quality" : quality,
-        "del_error" : del_error,
-        "read_size" : read_size,
-        "insert_size" : insert_size,
-        "snv_error" : snv_error,
-        "add_error" : add_error,
-        "del_error" : del_error,
-        "num_of_reads" : num_of_reads,
-        "file_name" : ref_genome_file.split(".")[0],
-        "ref_genome_size" : len(ref_genome)
-    }
-
-    generate_reads(gen_read_data)
-
-
-simulate("test.fa", 70, 4, 150, 500, 0, 0, 0)
+sequence_simulator("test.fa", 70, 4, 150, 500, 0, 0, 0)
