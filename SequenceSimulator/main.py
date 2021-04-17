@@ -203,5 +203,6 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         genome_length -= 1
         number_of_deletions -= 1
 
+
     return reference_genome
 
