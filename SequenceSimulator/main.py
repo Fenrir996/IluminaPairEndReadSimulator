@@ -132,25 +132,28 @@ def create_reverse_complement_genome(genome):
 def read_genome_from_fasta_file(file_name):
     file = open(file_name, 'r')
     lines = file.readlines()
-    genome = ''
+    genome = []
 
+    line_index = int(0)
     for line in lines:
         #  in case of multiple sequences
+        print('We are processing line: {}'.format(line_index))
+        line_index += int(1)
         if line[0] != '>':
-            genome += line.strip()
+            genome.extend(list(line.rstrip('\n')))
 
     file.close()
     # need to make a base nucleotide if some of them aren't
-    genome_length = len(genome)
-    new_genome = ''
-    for index in range(genome_length):
-        if genome[index] not in bases:
-            pre_genome = genome[0:index]
-            post_genome = genome[index + 1:genome_length]
-            new_base = change_into_base(genome[index])
-            genome = pre_genome + new_base + post_genome
+   # genome_length = len(genome)
+   # new_genome = ''
+    #for index in range(genome_length):
+     #   if genome[index] not in bases:
+      #      pre_genome = genome[0:index]
+       #     post_genome = genome[index + 1:genome_length]
+        #    new_base = change_into_base(genome[index])
+         #   genome = pre_genome + new_base + post_genome
 
-    return genome.upper()
+    return ''.join(genome).upper()
 
 
 # sigma should probably be 1.0, mean 60-80
@@ -335,5 +338,6 @@ def generate_reads(gen_read_data):
         read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, qualities2))
 
-
+# SampleGenome.fa
+# 69820_ref_ASM270686v1_chr12.fa
 sequence_simulator("69820_ref_ASM270686v1_chr12.fa", 70, 4, 150, 500, 0, 0, 0)
