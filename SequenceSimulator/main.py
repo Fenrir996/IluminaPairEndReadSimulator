@@ -4,12 +4,13 @@ import numpy
 qualities_in_ascii = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 bases = ['A', 'T', 'C', 'G']
 
-#FASTA format
-#>gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
-#MNSERSDVTLYQPFLDYAIAYMRSRLDLEPYPIPTGFESNSAVVGKGKNQEEVVTTSYAFQTAKLRQIRA -> nucleotides
-#AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
-#QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
-#LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
+
+# FASTA format
+# >gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
+# MNSERSDVTLYQPFLDYAIAYMRSRLDLEPYPIPTGFESNSAVVGKGKNQEEVVTTSYAFQTAKLRQIRA -> nucleotides
+# AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
+# QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
+# LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
 
 def change_into_base(nucleotide):
     number = random.randint(0, 100)
@@ -103,6 +104,7 @@ def change_into_base(nucleotide):
         else:
             return 'A'
 
+
 def create_reverse_complement_genome(genome):
     complementary_bases = {
         "A": "T",
@@ -114,6 +116,7 @@ def create_reverse_complement_genome(genome):
     for nucleotide in genome:
         result = complementary_bases[nucleotide] + result
     return result
+
 
 def read_genome_from_fasta_file(file_name):
     file = open(file_name, 'r')
@@ -132,11 +135,12 @@ def read_genome_from_fasta_file(file_name):
     for index in range(genome_length):
         if genome[index] not in bases:
             pre_genome = genome[0:index]
-            post_genome = genome[index+1:genome_length]
+            post_genome = genome[index + 1:genome_length]
             new_base = change_into_base(genome[index])
             genome = pre_genome + new_base + post_genome
 
     return genome.upper()
+
 
 # sigma should probably be 1.0, mean 60-80
 def create_qualities_by_normal_distribution(length, mean, sigma):
@@ -178,7 +182,7 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         while base_index == bases.index(reference_genome[variation_index]):
             base_index = random.randint(0, 100) % 4
         reference_genome_pre = reference_genome[0:variation_index]
-        reference_genome_post = reference_genome[variation_index+1:genome_length]
+        reference_genome_post = reference_genome[variation_index + 1:genome_length]
         reference_genome = reference_genome_pre + bases[base_index] + reference_genome_post
         number_of_variations -= 1
     # introduce insertion of singular nucleotides
@@ -198,7 +202,7 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         deletion_index = random.randint(0, genome_length)
         print(deletion_index)
         reference_genome_pre = reference_genome[0:deletion_index]
-        reference_genome_post = reference_genome[deletion_index+1:genome_length]
+        reference_genome_post = reference_genome[deletion_index + 1:genome_length]
         reference_genome = reference_genome_pre + reference_genome_post
         genome_length -= 1
         number_of_deletions -= 1
