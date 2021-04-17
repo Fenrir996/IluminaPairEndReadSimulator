@@ -248,23 +248,23 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
                        insert_error_rate, snv_error_rate):
     start_time = time.time()
 
-    if file:
+    if not file:
         print('Reference genome mast be defined!')
         return
 
-    if check_quality(average_quality) == 1:
+    if check_quality(average_quality) == 0:
         print('Quality mast be between 33 and 126')
         return
 
-    if check_coverage(coverage) == 1:
+    if check_coverage(coverage) == 0:
         print('Coverage mast be positive number')
         return
 
-    if check_positive_value(read_size) == 1:
+    if check_positive_value(read_size) == 0:
         print('Read size mast be positive number')
         return
 
-    if check_positive_value(insert_size) == 1:
+    if check_positive_value(insert_size) == 0:
         print('Insert size mast be positive number')
         return
 
@@ -272,15 +272,15 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
         print('Read size can not be longer than insert size (size of the fragment of the genome)')
         return
 
-    if check_errors_values(delete_error_rate):
+    if check_errors_values(delete_error_rate) == 0:
         print('Delete error mast be value between 0 and 1')
         return
 
-    if check_errors_values(insert_error_rate):
+    if check_errors_values(insert_error_rate) == 0:
         print('Insert error mast be value between 0 and 1')
         return
 
-    if check_errors_values(snv_error_rate):
+    if check_errors_values(snv_error_rate) == 0:
         print('SNV error mast be value between 0 and 1')
         return
 
@@ -336,4 +336,4 @@ def generate_reads(gen_read_data):
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, qualities2))
 
 
-sequence_simulator("test.fa", 70, 4, 150, 500, 0, 0, 0)
+sequence_simulator("69820_ref_ASM270686v1_chr12.fa", 70, 4, 150, 500, 0, 0, 0)
