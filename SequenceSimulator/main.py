@@ -347,12 +347,11 @@ def generate_reads(gen_read_data):
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
         read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
-
-        orig_read = create_reverse_complement_genome(read2)
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, read2_qualities))
 
+        orig_read2 = create_reverse_complement_genome(read2)
         sam.write(sam_data.format(read_id, read1_start + 1, read1, read1_qualities))
-        sam.write(sam_data.format(read_id, read2_start + 1, orig_read, read2_qualities))
+        sam.write(sam_data.format(read_id, read2_start + 1, orig_read2, read2_qualities))
 
     fastq1.close()
     fastq2.close()
