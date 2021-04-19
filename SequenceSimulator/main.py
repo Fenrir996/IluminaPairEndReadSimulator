@@ -16,12 +16,19 @@ bases = ['A', 'T', 'C', 'G']
 # qualities
 fastq_entry = "@{}#{}\n{}\n+\n{}\n"
 
+# @SQ SN:sequence_name LN:sequence_length
+sam_QNAME = "@SQ SN:{} LN:{}\n"
+
+# read_id read_position read read_quality
+sam_data ="{}\t{}\t{}\t{}\n"
+
 # FASTA format
 # >gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
 # MNSERSDVTLYQPFLDYAIAYMRSRLDLEPYPIPTGFESNSAVVGKGKNQEEVVTTSYAFQTAKLRQIRA -> nucleotides
 # AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
 # QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
 # LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
+
 
 def change_into_base(nucleotide):
     number = random.randint(0, 100)
@@ -132,26 +139,28 @@ def create_reverse_complement_genome(genome):
 def read_genome_from_fasta_file(file_name):
     file = open(file_name, 'r')
     lines = file.readlines()
-    genome = []
+    genome = ''
+    genome_name = ''
 
-    line_index = int(0)
     for line in lines:
         #  in case of multiple sequences
-        print('We are processing line: {}'.format(line_index))
-        line_index += int(1)
         if line[0] != '>':
-            genome.extend(list(line.rstrip('\n')))
+            genome += line.strip()
+        else:
+            genome_name += line.strip()[1:]
 
     file.close()
-
     # need to make a base nucleotide if some of them aren't
     genome_length = len(genome)
+    new_genome = ''
     for index in range(genome_length):
         if genome[index] not in bases:
+            pre_genome = genome[0:index]
+            post_genome = genome[index + 1:genome_length]
             new_base = change_into_base(genome[index])
-            genome[index] = new_base
-    
-    return ''.join(genome).upper()
+            genome = pre_genome + new_base + post_genome
+
+    return [genome.upper(), genome_name]
 
 
 # sigma should probably be 1.0, mean 60-80
@@ -292,16 +301,17 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
     referent_genome = read_genome_from_fasta_file(file)
 
     gen_read_data = {
-        "ref_genome": referent_genome,
+        "ref_genome": referent_genome[0],
+        "ref_genome_name": referent_genome[1],
         "quality": average_quality,
         "read_size": read_size,
         "insert_size": insert_size,
         "snv_error": snv_error_rate,
         "add_error": insert_error_rate,
         "del_error": delete_error_rate,
-        "num_of_reads": int(coverage * len(referent_genome) / read_size),
+        "num_of_reads": int(coverage * len(referent_genome[0]) / read_size),
         "file_name": file.split(".")[0],
-        "ref_genome_size": len(referent_genome)
+        "ref_genome_size": len(referent_genome[0])
     }
 
     generate_reads(gen_read_data)
@@ -318,24 +328,31 @@ def generate_read(ref_genome, read_start, read_end, direction):
 
 
 def generate_reads(gen_read_data):
-    fastq1 = open("read1.fastq", "w")
-    fastq2 = open("read2.fastq", "w")
+    fastq1 = open("{}_read1.fastq".format(gen_read_data["file_name"]), "w")
+    fastq2 = open("{}_read2.fastq".format(gen_read_data["file_name"]), "w")
+    sam = open("{}.sam".format(gen_read_data["file_name"]), "w")
 
+    sam.write(sam_QNAME.format(gen_read_data["ref_genome_name"], gen_read_data["ref_genome_size"]))
     for i in range(gen_read_data["num_of_reads"]):
-        read_id = gen_read_data["file_name"] + "_" + str(i)
+        read_id = gen_read_data["ref_genome_name"] + "_" + str(i)
 
-        qualities1 = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],                                         NORMAL_DIST_SIGMA)
+        read1_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"], NORMAL_DIST_SIGMA)
         read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
         read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
-        fastq1.write(fastq_entry.format(read_id, LEFT, read1, qualities1));
+        fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities));
 
-        qualities2 = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],                                                  NORMAL_DIST_SIGMA)
+        read2_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"], NORMAL_DIST_SIGMA)
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
         read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
-        fastq2.write(fastq_entry.format(read_id, RIGHT, read2, qualities2))
+        fastq2.write(fastq_entry.format(read_id, RIGHT, read2, read2_qualities))
 
-# SampleGenome.fa
-# 69820_ref_ASM270686v1_chr12.fa
-sequence_simulator("69820_ref_ASM270686v1_chr12.fa", 70, 4, 150, 500, 0, 0, 0)
+        sam.write(sam_data.format(read_id, read1_start, read1, read1_qualities))
+        sam.write(sam_data.format(read_id, read2_start, read2, read2_qualities))
+
+    fastq1.close()
+    fastq2.close()
+    sam.close()
+
+sequence_simulator("SampleGenome.fa", 70, 4, 3, 5, 0, 0, 0)
