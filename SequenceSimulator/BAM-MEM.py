@@ -9,6 +9,27 @@ def compare_sam_files(nmd_sam_file, bwa_sam_file):
     return correctly_aligned * 100 / len(alignments)
 
 
+def calculate_correctly_aligned(alignments, our_sam, bwa_sam_file):
+    correctly_aligned = 0
+    for line in our_sam.readlines():
+        if line[0] == '@':
+            continue
+        split = line.split('\t')
+        map_id = split[0] + split[2]
+        alignments[map_id] = split[1]
+    our_sam.close()
+    bwa_sam = open(bwa_sam_file, "r")
+    for line in bwa_sam.readlines():
+        if line[0] == '@':
+            continue
+        split = line.split('\t')
+        map_id = split[0] + split[9]
+        if alignments.get(map_id) == split[3]:
+            correctly_aligned += 1
+
+    return correctly_aligned
+
+
 def simulate_bwa():
     file_name = "69820_ref_ASM270686v1_chr12"  # add the name of refGenome file - without extension!
     delete_error_rate = int(0)
