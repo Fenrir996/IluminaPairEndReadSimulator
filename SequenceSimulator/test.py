@@ -10,7 +10,7 @@ def test_methods():
     nucleotide = change_into_base('N')
     assert nucleotide == 'A' or nucleotide == 'T' or nucleotide == 'C' or nucleotide == 'G'
 
-    # Test create_qualities_by_normal_distribution
+    # create_qualities_by_normal_distribution
     qualities = create_qualities_by_normal_distribution(20, 80, 1)
     for quality in qualities:
         assert 77 <= ord(quality) <= 83

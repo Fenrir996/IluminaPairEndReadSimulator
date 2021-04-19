@@ -14,7 +14,7 @@ bases = ['A', 'T', 'C', 'G']
 # read
 # +
 # qualities
-fastq_entry = "@{}#{}\n{}\n+\n{}\n"
+fastq_entry = "@{}/{}\n{}\n+\n{}\n"
 
 # @SQ SN:sequence_name LN:sequence_length
 sam_QNAME = "@SQ SN:{} LN:{}\n"
@@ -128,7 +128,8 @@ def create_reverse_complement_genome(genome):
         "A": "T",
         "C": "G",
         "T": "A",
-        "G": "C"
+        "G": "C",
+        "N": "N"
     }
     result = ''
     for nucleotide in genome:
@@ -147,18 +148,18 @@ def read_genome_from_fasta_file(file_name):
         if line[0] != '>':
             genome += line.strip()
         else:
-            genome_name += line.strip()[1:]
+            genome_name = line[1:].rstrip('\n').split()[0]
 
     file.close()
     # need to make a base nucleotide if some of them aren't
-    genome_length = len(genome)
-    new_genome = ''
-    for index in range(genome_length):
-        if genome[index] not in bases:
-            pre_genome = genome[0:index]
-            post_genome = genome[index + 1:genome_length]
-            new_base = change_into_base(genome[index])
-            genome = pre_genome + new_base + post_genome
+    # genome_length = len(genome)
+    # new_genome = ''
+    # for index in range(genome_length):
+    #     if genome[index] not in bases:
+    #         pre_genome = genome[0:index]
+    #         post_genome = genome[index + 1:genome_length]
+    #         new_base = change_into_base(genome[index])
+    #         genome = pre_genome + new_base + post_genome
 
     return [genome.upper(), genome_name]
 
@@ -346,13 +347,13 @@ def generate_reads(gen_read_data):
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
         read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
+
+        orig_read = create_reverse_complement_genome(read2)
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, read2_qualities))
 
-        sam.write(sam_data.format(read_id, read1_start, read1, read1_qualities))
-        sam.write(sam_data.format(read_id, read2_start, read2, read2_qualities))
+        sam.write(sam_data.format(read_id, read1_start + 1, read1, read1_qualities))
+        sam.write(sam_data.format(read_id, read2_start + 1, orig_read, read2_qualities))
 
     fastq1.close()
     fastq2.close()
     sam.close()
-
-sequence_simulator("SampleGenome.fa", 70, 4, 3, 5, 0, 0, 0)

@@ -31,7 +31,7 @@ def calculate_correctly_aligned(alignments, our_sam, bwa_sam_file):
 
 
 def simulate_bwa():
-    file_name = "69820_ref_ASM270686v1_chr12"  # add the name of refGenome file - without extension!
+    file_name = "Test"  # add the name of refGenome file - without extension!
     delete_error_rate = int(0)
     insert_error_rate = int(0)
     snv_error_rate = int(0)
@@ -39,8 +39,8 @@ def simulate_bwa():
     sequence_simulator("{}.fa".format(file_name), 70, 4, 150, 500, delete_error_rate, insert_error_rate, snv_error_rate)
 
     subprocess.run(["bwa", "index", "{}.fa".format(file_name)])
-    subprocess.run(["bwa", "mem", "{}.fa".format(file_name), "read1.fastq",
-                    "read2.fastq"], stdout=open("{}_bwa.sam".format(file_name), "w"))
+    subprocess.run(["bwa", "mem", "{}.fa".format(file_name), "{}_read1.fastq".format(file_name),
+                    "{}_read2.fastq".format(file_name)], stdout=open("{}_bwa.sam".format(file_name), "w"))
 
     result = compare_sam_files("{}.sam".format(file_name), "{}_bwa.sam".format(file_name))
     result_file.write(
