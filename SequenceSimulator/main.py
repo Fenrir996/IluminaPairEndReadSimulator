@@ -8,7 +8,7 @@ LEFT = 1
 RIGHT = 2
 
 qualities_in_ascii = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-bases = ['A', 'T', 'C', 'G']
+bases = ['A', 'T', 'C', 'G', 'N']
 
 # @read_id#read_direction(1 - right, 2 - left)
 # read
@@ -199,6 +199,9 @@ def mutate_genome(reference_genome, gen_read_data):
     number_of_deletions = gen_read_data["del_errors"]
     number_of_variations = gen_read_data["snv_errors"]
 
+    if number_of_variations <= 0 or number_of_insertions <= 0 or number_of_deletions <= 0:
+        return reference_genome
+
     gen_read_data["add_errors"] -= 1
     gen_read_data["del_errors"] -= 1
     gen_read_data["snv_errors"] -= 1
@@ -206,7 +209,7 @@ def mutate_genome(reference_genome, gen_read_data):
     # introduce single nucleotide variation - SNV
 
     while number_of_variations > 0:
-        variation_index = random.randint(0, genome_length)
+        variation_index = random.randint(0, genome_length - 1)
         # print(variation_index)
         base_index = random.randint(0, 100) % 4
         while base_index == bases.index(reference_genome[variation_index]):
@@ -218,7 +221,7 @@ def mutate_genome(reference_genome, gen_read_data):
     # introduce insertion of singular nucleotides
 
     while number_of_insertions > 0:
-        insertion_index = random.randint(0, genome_length)
+        insertion_index = random.randint(0, genome_length - 1)
         # print(insertion_index)
         base_index = random.randint(0, 100) % 4
         reference_genome_pre = reference_genome[0:insertion_index]
@@ -229,7 +232,7 @@ def mutate_genome(reference_genome, gen_read_data):
 
     # introduce deletion of singular nucleotides
     while number_of_deletions > 0:
-        deletion_index = random.randint(0, genome_length)
+        deletion_index = random.randint(0, genome_length - 1)
         # print(deletion_index)
         reference_genome_pre = reference_genome[0:deletion_index]
         reference_genome_post = reference_genome[deletion_index + 1:genome_length]
@@ -316,9 +319,9 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
         "quality": average_quality,
         "read_size": read_size,
         "insert_size": insert_size,
-        "snv_errors": snv_error_rate * len(referent_genome[0]),
-        "add_errors": insert_error_rate * len(referent_genome[0]),
-        "del_errors": delete_error_rate * len(referent_genome[0]),
+        "snv_errors": int(snv_error_rate * len(referent_genome[0])),
+        "add_errors": int(insert_error_rate * len(referent_genome[0])),
+        "del_errors": int(delete_error_rate * len(referent_genome[0])),
         "num_of_reads": int(coverage * len(referent_genome[0]) / read_size),
         "file_name": file.split(".")[0],
         "ref_genome_size": len(referent_genome[0])
