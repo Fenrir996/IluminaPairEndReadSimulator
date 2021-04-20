@@ -20,7 +20,8 @@ fastq_entry = "@{}/{}\n{}\n+\n{}\n"
 sam_QNAME = "@SQ SN:{} LN:{}\n"
 
 # read_id read_position read read_quality
-sam_data ="{}\t{}\t{}\t{}\n"
+sam_data = "{}\t{}\t{}\t{}\n"
+
 
 # FASTA format
 # >gi|186681228|ref|YP_001864424.1| phycoerythrobilin:ferredoxin oxidoreductase -> name
@@ -123,7 +124,8 @@ def change_into_base(nucleotide):
         else:
             return 'A'
 
-#Initially worked with just ATCG however N had to be added because we depracated using the method above
+
+# Initially worked with just ATCG however N had to be added because we depracated using the method above
 
 
 def create_reverse_complement_genome(genome):
@@ -231,7 +233,7 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
         genome_length -= 1
         number_of_deletions -= 1
 
-    return list(reference_genome)
+    return reference_genome
 
 
 def check_positive_value(value):
@@ -304,6 +306,8 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
 
     referent_genome = read_genome_from_fasta_file(file)
 
+    referent_genome = mutate_genome(referent_genome, insert_error_rate, delete_error_rate, snv_error_rate)
+
     gen_read_data = {
         "ref_genome": referent_genome[0],
         "ref_genome_name": referent_genome[1],
@@ -340,13 +344,15 @@ def generate_reads(gen_read_data):
     for i in range(gen_read_data["num_of_reads"]):
         read_id = gen_read_data["ref_genome_name"] + "_" + str(i)
 
-        read1_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"], NORMAL_DIST_SIGMA)
+        read1_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],
+                                                                  NORMAL_DIST_SIGMA)
         read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
         read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
         fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities));
 
-        read2_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"], NORMAL_DIST_SIGMA)
+        read2_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],
+                                                                  NORMAL_DIST_SIGMA)
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
         read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
