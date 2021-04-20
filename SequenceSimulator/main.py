@@ -193,17 +193,21 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
 
 # keep error rates under 0.01 eg. 0.001, 0.005, 0.009
 
-def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_error_rate):
+def mutate_genome(reference_genome, gen_read_data):
     genome_length = len(reference_genome)
-    number_of_insertions = round(insert_error_rate * genome_length)
-    number_of_deletions = round(delete_error_rate * genome_length)
-    number_of_variations = round(snv_error_rate * genome_length)
+    number_of_insertions = gen_read_data["add_errors"]
+    number_of_deletions = gen_read_data["del_errors"]
+    number_of_variations = gen_read_data["snv_errors"]
+
+    gen_read_data["add_errors"] -= 1
+    gen_read_data["del_errors"] -= 1
+    gen_read_data["snv_errors"] -= 1
 
     # introduce single nucleotide variation - SNV
 
     while number_of_variations > 0:
         variation_index = random.randint(0, genome_length)
-        print(variation_index)
+        # print(variation_index)
         base_index = random.randint(0, 100) % 4
         while base_index == bases.index(reference_genome[variation_index]):
             base_index = random.randint(0, 100) % 4
@@ -215,7 +219,7 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
 
     while number_of_insertions > 0:
         insertion_index = random.randint(0, genome_length)
-        print(insertion_index)
+        # print(insertion_index)
         base_index = random.randint(0, 100) % 4
         reference_genome_pre = reference_genome[0:insertion_index]
         reference_genome_post = reference_genome[insertion_index:genome_length]
@@ -226,7 +230,7 @@ def mutate_genome(reference_genome, insert_error_rate, delete_error_rate, snv_er
     # introduce deletion of singular nucleotides
     while number_of_deletions > 0:
         deletion_index = random.randint(0, genome_length)
-        print(deletion_index)
+        # print(deletion_index)
         reference_genome_pre = reference_genome[0:deletion_index]
         reference_genome_post = reference_genome[deletion_index + 1:genome_length]
         reference_genome = reference_genome_pre + reference_genome_post
@@ -306,17 +310,15 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
 
     referent_genome = read_genome_from_fasta_file(file)
 
-    referent_genome = mutate_genome(referent_genome, insert_error_rate, delete_error_rate, snv_error_rate)
-
     gen_read_data = {
         "ref_genome": referent_genome[0],
         "ref_genome_name": referent_genome[1],
         "quality": average_quality,
         "read_size": read_size,
         "insert_size": insert_size,
-        "snv_error": snv_error_rate,
-        "add_error": insert_error_rate,
-        "del_error": delete_error_rate,
+        "snv_errors": snv_error_rate * len(referent_genome[0]),
+        "add_errors": insert_error_rate * len(referent_genome[0]),
+        "del_errors": delete_error_rate * len(referent_genome[0]),
         "num_of_reads": int(coverage * len(referent_genome[0]) / read_size),
         "file_name": file.split(".")[0],
         "ref_genome_size": len(referent_genome[0])
@@ -329,8 +331,9 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
     print("Sequencing finished. Time elapsed: {}".format(end_time - start_time))
 
 
-def generate_read(ref_genome, read_start, read_end, direction):
-    read = ref_genome[read_start:read_end]
+def generate_read(gen_read_data, read_start, read_end, direction):
+    read = gen_read_data["ref_genome"][read_start:read_end]
+    read = mutate_genome(read, gen_read_data)
     if direction == RIGHT:
         read = create_reverse_complement_genome(read)
     return read
@@ -345,18 +348,18 @@ def generate_reads(gen_read_data):
     for i in range(gen_read_data["num_of_reads"]):
         read_id = gen_read_data["ref_genome_name"] + "_" + str(i)
 
-        read1_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],
-                                                                  NORMAL_DIST_SIGMA)
         read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
-        read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
+        read1 = generate_read(gen_read_data, read1_start, read1_finish, LEFT)
+        read1_qualities = create_qualities_by_normal_distribution(len(read1), gen_read_data["quality"],
+                                                                  NORMAL_DIST_SIGMA)
         fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities))
 
-        read2_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"],
-                                                                  NORMAL_DIST_SIGMA)
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
-        read2 = generate_read(gen_read_data["ref_genome"], read2_start, read2_end, RIGHT)
+        read2 = generate_read(gen_read_data, read2_start, read2_end, RIGHT)
+        read2_qualities = create_qualities_by_normal_distribution(len(read2), gen_read_data["quality"],
+                                                                  NORMAL_DIST_SIGMA)
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, read2_qualities))
 
         orig_read2 = create_reverse_complement_genome(read2)
