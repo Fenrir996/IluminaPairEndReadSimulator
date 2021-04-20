@@ -324,6 +324,7 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
 
     generate_reads(gen_read_data)
 
+
     end_time = time.time()
     print("Sequencing finished. Time elapsed: {}".format(end_time - start_time))
 
