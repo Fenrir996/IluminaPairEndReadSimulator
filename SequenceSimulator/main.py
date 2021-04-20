@@ -344,7 +344,7 @@ def generate_reads(gen_read_data):
         read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
         read1 = generate_read(gen_read_data["ref_genome"], read1_start, read1_finish, LEFT)
-        fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities));
+        fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities))
 
         read2_qualities = create_qualities_by_normal_distribution(gen_read_data["read_size"], gen_read_data["quality"], NORMAL_DIST_SIGMA)
         read2_end = read1_start + gen_read_data["insert_size"]
