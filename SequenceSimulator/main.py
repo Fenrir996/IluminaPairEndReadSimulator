@@ -28,7 +28,8 @@ sam_data ="{}\t{}\t{}\t{}\n"
 # AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
 # QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
 # LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
-
+# Unfortunatelly this method will not be used because it destroys the percentages of our testing with BWA-MEM
+# since BWA-MEM works with Ns
 
 def change_into_base(nucleotide):
     number = random.randint(0, 100)
@@ -121,6 +122,8 @@ def change_into_base(nucleotide):
             return 'C'
         else:
             return 'A'
+
+#Initially worked with just ATCG however N had to be added because we depracated using the method above
 
 
 def create_reverse_complement_genome(genome):
