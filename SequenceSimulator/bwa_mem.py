@@ -30,11 +30,9 @@ def calculate_correctly_aligned(alignments, our_sam, bwa_sam_file):
     return correctly_aligned
 
 
-def simulate_bwa():
-    file_name = "Test"  # add the name of refGenome file - without extension!
-    delete_error_rate = int(0)
-    insert_error_rate = int(0)
-    snv_error_rate = int(0)
+# add the name of refGenome file - without extension!
+
+def simulate_bwa(file_name, delete_error_rate, insert_error_rate, snv_error_rate):
     result_file = open("results.txt", "w")
     sequence_simulator("{}.fa".format(file_name), 70, 4, 150, 500, delete_error_rate, insert_error_rate, snv_error_rate)
 
@@ -46,6 +44,6 @@ def simulate_bwa():
     result_file.write(
         "Error rate for DELETE: {}, error rate for INSERT: {}, error rate for SNV: {}, "
         "BWA-MEM accuracy of alignment is: {}%.\n".format(delete_error_rate, insert_error_rate, snv_error_rate, result))
+    return result
 
-
-simulate_bwa()
+# simulate_bwa("Test")

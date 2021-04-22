@@ -8,9 +8,9 @@ def ploting_function(structs):
     i = int(0)
     name = ''
     for struct in structs:
-        courses.append(structs[struct]['errors'])
-        values.append(structs[struct]['accuracy'])
-        name = structs[struct]['graph_name']
+        courses.append(struct['errors'])
+        values.append(struct['accuracy'])
+        name = struct['graph_name']
     courses = list(courses)
     values = list(values)
     fig = plt.figure(figsize=(10, 5))
