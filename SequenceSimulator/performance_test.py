@@ -19,7 +19,7 @@ input_errors = [
     }
 ]
 
-
+# Method for creating all we need for plotting
 def do_test_for_file(file_name):
     test_results = []
 

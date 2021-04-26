@@ -1,3 +1,4 @@
+# Takes in our sam file and Bowtie's sam file and does a comparison, gives result in percent
 def compare_sam_files(nmd_sam_file, bwa_sam_file):
     alignments = {}
     our_sam = open(nmd_sam_file, "r")
@@ -6,7 +7,8 @@ def compare_sam_files(nmd_sam_file, bwa_sam_file):
     result_file = open("resultsBowTie.txt", "w")
     result_file.write("BWA-MEM accuracy of alignment is: {}%.\n".format(results))
 
-
+# Helping method for comparing SAMs, takes into account only alignment lines, skips those that start with a '@'
+# which usually contain a name or some other identifier
 def calculate_correctly_aligned(alignments, our_sam, bwa_sam_file):
     correctly_aligned = 0
     for line in our_sam.readlines():

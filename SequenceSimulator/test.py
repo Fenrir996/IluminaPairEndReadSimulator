@@ -1,6 +1,6 @@
 from main import create_reverse_complement_genome, change_into_base, create_qualities_by_normal_distribution
 
-
+# Testing our utility methods, needs to be expanded
 def test_methods():
     # Test create_reverse_complement_genome
     reverse = create_reverse_complement_genome("ATCG")

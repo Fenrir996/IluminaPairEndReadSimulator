@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# Function for plotting we needed for the presentation
 def ploting_function(structs):
     courses = []
     values = []

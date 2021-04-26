@@ -7,7 +7,11 @@ NORMAL_DIST_SIGMA = 2
 LEFT = 1
 RIGHT = 2
 
+# Qualities go from 33 to 126 in ascii so we have them mapped here. In case you want to change the scale
+# for example go for 1 to 91, you're free to do that here
 qualities_in_ascii = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+# Bases were at first only ATCG, but there was a need for expanding so we had to delete a frankenstein method
+# which used to convert non base nucleotides to base nucleotides
 bases = ['A', 'T', 'C', 'G', 'N']
 
 # @read_id#read_direction(1 - right, 2 - left)
@@ -29,105 +33,9 @@ sam_data = "{}\t{}\t{}\t{}\n"
 # AHVQGGNSLQVLNFVIFPHLNYDLPFFGADLVTLPGGHLIALDMQPLFRDDSAYQAKYTEPILPIFHAHQ
 # QHLSWGGDFPEEAQPFFSPAFLWTRPQETAVVETQVFAAFKDYLKAYLDFVEQAEAVTDSQNLVAIKQAQ
 # LRYLRYRAEKDPARGMFKRFYGAEWTEEYIHGFLFDLERKLTVVK
-# Unfortunatelly this method will not be used because it destroys the percentages of our testing with BWA-MEM
-# since BWA-MEM works with Ns
 
-def change_into_base(nucleotide):
-    number = random.randint(0, 100)
-
-    if nucleotide == 'R':
-        rng = number % 2
-        if rng == 0:
-            return 'G'
-        else:
-            return 'A'
-
-    if nucleotide == 'Y':
-        rng = number % 2
-        if rng == 0:
-            return 'T'
-        else:
-            return 'C'
-
-    if nucleotide == 'K':
-        rng = number % 2
-        if rng == 0:
-            return 'G'
-        else:
-            return 'T'
-
-    if nucleotide == 'M':
-        rng = number % 2
-        if rng == 0:
-            return 'C'
-        else:
-            return 'A'
-
-    if nucleotide == 'S':
-        rng = number % 2
-        if rng == 0:
-            return 'G'
-        else:
-            return 'C'
-
-    if nucleotide == 'W':
-        rng = number % 2
-        if rng == 0:
-            return 'T'
-        else:
-            return 'A'
-
-    if nucleotide == 'B':
-        rng = number % 3
-        if rng == 0:
-            return 'G'
-        elif rng == 1:
-            return 'T'
-        else:
-            return 'C'
-
-    if nucleotide == 'D':
-        rng = number % 3
-        if rng == 0:
-            return 'G'
-        elif rng == 1:
-            return 'T'
-        else:
-            return 'A'
-
-    if nucleotide == 'H':
-        rng = number % 3
-        if rng == 0:
-            return 'A'
-        elif rng == 1:
-            return 'T'
-        else:
-            return 'C'
-
-    if nucleotide == 'V':
-        rng = number % 3
-        if rng == 0:
-            return 'G'
-        elif rng == 1:
-            return 'A'
-        else:
-            return 'C'
-
-    if nucleotide == 'N':
-        rng = number % 4
-        if rng == 0:
-            return 'G'
-        elif rng == 1:
-            return 'T'
-        elif rng == 2:
-            return 'C'
-        else:
-            return 'A'
-
-
-# Initially worked with just ATCG however N had to be added because we depracated using the method above
-
-
+# Method which creates reverse complements for a given genome as string
+# This mimics what polymerase does when creating a complement on a parallel strand
 def create_reverse_complement_genome(genome):
     complementary_bases = {
         "A": "T",
@@ -141,7 +49,7 @@ def create_reverse_complement_genome(genome):
         result = complementary_bases[nucleotide] + result
     return result
 
-
+# Method for reading fasta file, file needs to be in root of the project
 def read_genome_from_fasta_file(file_name):
     file = open(file_name, 'r')
     lines = file.readlines()
@@ -156,20 +64,13 @@ def read_genome_from_fasta_file(file_name):
             genome_name = line[1:].rstrip('\n').split()[0]
 
     file.close()
-    # need to make a base nucleotide if some of them aren't
-    # genome_length = len(genome)
-    # new_genome = ''
-    # for index in range(genome_length):
-    #     if genome[index] not in bases:
-    #         pre_genome = genome[0:index]
-    #         post_genome = genome[index + 1:genome_length]
-    #         new_base = change_into_base(genome[index])
-    #         genome = pre_genome + new_base + post_genome
-
     return [genome.upper(), genome_name]
 
 
 # sigma should probably be 1.0, mean 60-80
+# Given the average quality for the whole genome we had to give each nucleotide in the genome its' own read quality
+# this method does exactly that, creating an array of qualities where the index of the quality array fits the
+# index of the nucleotide in genome array
 def create_qualities_by_normal_distribution(length, mean, sigma):
     quality_values = numpy.random.normal(mean, sigma, length)
     qualities = ''
@@ -178,9 +79,11 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
         if chr(int_val) in qualities_in_ascii:
             quality = int_val
         else:
+            #if by some chance it drops under lowest value give it the lowest value
             if int(33) > int_val > int(0):
                 quality = int(33)
             else:
+                #if it goes above the max value, give it max value
                 if int_val > int(126):
                     quality = int(126)
                 else:
@@ -192,7 +95,12 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
 
 
 # keep error rates under 0.01 eg. 0.001, 0.005, 0.009
-
+# This method is responsible for mutating the genome as the name states. However down the line we figured that
+# even if we mutate the whole genome we could still take pieces untouched by the mutation. So, yes
+# this method can be used to mutate the whole genome, but we use it to mutate reads actually to make sure we work
+# with errors.
+# reference_genome presents the nucleotides, while gen_read_data is a structure which holds the number of errors
+# we have to make of each type
 def mutate_genome(reference_genome, gen_read_data):
     genome_length = len(reference_genome)
     number_of_insertions = gen_read_data["add_errors"]
@@ -207,10 +115,9 @@ def mutate_genome(reference_genome, gen_read_data):
     gen_read_data["snv_errors"] -= 1
 
     # introduce single nucleotide variation - SNV
-
+    # at a random position change the nucleotide into another random one, not the same one
     while number_of_variations > 0:
         variation_index = random.randint(0, genome_length - 1)
-        # print(variation_index)
         base_index = random.randint(0, 100) % 4
         while base_index == bases.index(reference_genome[variation_index]):
             base_index = random.randint(0, 100) % 4
@@ -219,10 +126,9 @@ def mutate_genome(reference_genome, gen_read_data):
         reference_genome = reference_genome_pre + bases[base_index] + reference_genome_post
         number_of_variations -= 1
     # introduce insertion of singular nucleotides
-
+    # at a random position insert a random nucleotide
     while number_of_insertions > 0:
         insertion_index = random.randint(0, genome_length - 1)
-        # print(insertion_index)
         base_index = random.randint(0, 100) % 4
         reference_genome_pre = reference_genome[0:insertion_index]
         reference_genome_post = reference_genome[insertion_index:genome_length]
@@ -231,9 +137,9 @@ def mutate_genome(reference_genome, gen_read_data):
         number_of_insertions -= 1
 
     # introduce deletion of singular nucleotides
+    # at a random position delete the specified nucleotide
     while number_of_deletions > 0:
         deletion_index = random.randint(0, genome_length - 1)
-        # print(deletion_index)
         reference_genome_pre = reference_genome[0:deletion_index]
         reference_genome_post = reference_genome[deletion_index + 1:genome_length]
         reference_genome = reference_genome_pre + reference_genome_post
@@ -242,7 +148,7 @@ def mutate_genome(reference_genome, gen_read_data):
 
     return reference_genome
 
-
+# Utility checks
 def check_positive_value(value):
     if value < 0:
         return 0
@@ -267,10 +173,17 @@ def check_quality(average_quality):
     return 1
 
 
+# the simulator
+# file is the name of the file in the root of the project
+# average_quality is the average read quality of the whole genome, so a number
+# coverage, read_size, insert_size, also numbers, where read_size, has to be larger than insert_size
+# error rates are between 0 and 1 which later get transferred into percent
+
 def sequence_simulator(file, average_quality, coverage, read_size, insert_size, delete_error_rate,
                        insert_error_rate, snv_error_rate):
     start_time = time.time()
 
+    # block of checks
     if not file:
         print('Reference genome mast be defined!')
         return
@@ -311,6 +224,7 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
         print('Sum of error can not be greater than 1')
         return
 
+    # read the genome from fasta
     referent_genome = read_genome_from_fasta_file(file)
 
     gen_read_data = {
@@ -327,6 +241,7 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
         "ref_genome_size": len(referent_genome[0])
     }
 
+    # Method which does all the reading and writing
     generate_reads(gen_read_data)
 
 
@@ -334,15 +249,20 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
     print("Sequencing finished. Time elapsed: {}".format(end_time - start_time))
 
 
+# Utility method which generates one read
+# It takes the error information via gen_read_data, position of read start and end
+# And the direction of reading which is backwards for read2
 def generate_read(gen_read_data, read_start, read_end, direction):
     read = gen_read_data["ref_genome"][read_start:read_end]
     read = mutate_genome(read, gen_read_data)
+    # For read2 direction is right
     if direction == RIGHT:
         read = create_reverse_complement_genome(read)
     return read
 
-
+# Main method of the simulator
 def generate_reads(gen_read_data):
+    # Creates fastq files and a SAM file
     fastq1 = open("{}_read1.fastq".format(gen_read_data["file_name"]), "w")
     fastq2 = open("{}_read2.fastq".format(gen_read_data["file_name"]), "w")
     sam = open("{}.sam".format(gen_read_data["file_name"]), "w")
@@ -351,13 +271,17 @@ def generate_reads(gen_read_data):
     for i in range(gen_read_data["num_of_reads"]):
         read_id = gen_read_data["ref_genome_name"] + "_" + str(i)
 
+        # Pick a random place to start reading read1
         read1_start = random.randint(0, gen_read_data["ref_genome_size"] - gen_read_data["insert_size"])
         read1_finish = read1_start + gen_read_data["read_size"]
+        # Generate the read
         read1 = generate_read(gen_read_data, read1_start, read1_finish, LEFT)
+        # Generate the qualities, since there's no reason to create qualities for the whole genome
         read1_qualities = create_qualities_by_normal_distribution(len(read1), gen_read_data["quality"],
                                                                   NORMAL_DIST_SIGMA)
         fastq1.write(fastq_entry.format(read_id, LEFT, read1, read1_qualities))
 
+        # Same for read2
         read2_end = read1_start + gen_read_data["insert_size"]
         read2_start = read2_end - gen_read_data["read_size"]
         read2 = generate_read(gen_read_data, read2_start, read2_end, RIGHT)
@@ -366,6 +290,7 @@ def generate_reads(gen_read_data):
         fastq2.write(fastq_entry.format(read_id, RIGHT, read2, read2_qualities))
 
         orig_read2 = create_reverse_complement_genome(read2)
+        #  Generate SAM file
         sam.write(sam_data.format(read_id, read1_start + 1, read1, read1_qualities))
         sam.write(sam_data.format(read_id, read2_start + 1, orig_read2, read2_qualities))
 
