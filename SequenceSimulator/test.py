@@ -1,4 +1,4 @@
-from main import create_reverse_complement_genome, create_qualities_by_normal_distribution, change_into_base, \
+from main import create_reverse_complement_genome, create_qualities_by_normal_distribution, \
     read_genome_from_fasta_file, sequence_simulator
 
 ERROR = -1
@@ -14,10 +14,6 @@ def test_methods():
     qualities = create_qualities_by_normal_distribution(20, 80, 1)
     for quality in qualities:
         assert 77 <= ord(quality) <= 83
-
-    # Test change_into_base
-    nucleotide = change_into_base('N')
-    assert nucleotide == 'A' or nucleotide == 'T' or nucleotide == 'C' or nucleotide == 'G'
 
     # Test function for reading genomes
     read = read_genome_from_fasta_file('SampleGenome.fa')
