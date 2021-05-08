@@ -6,6 +6,7 @@ import numpy
 NORMAL_DIST_SIGMA = 2
 LEFT = 1
 RIGHT = 2
+ERROR = -1
 
 # Qualities go from 33 to 126 in ascii so we have them mapped here. In case you want to change the scale
 # for example go for 1 to 91, you're free to do that here
@@ -49,6 +50,7 @@ def create_reverse_complement_genome(genome):
         result = complementary_bases[nucleotide] + result
     return result
 
+
 # Method for reading fasta file, file needs to be in root of the project
 def read_genome_from_fasta_file(file_name):
     file = open(file_name, 'r')
@@ -79,11 +81,11 @@ def create_qualities_by_normal_distribution(length, mean, sigma):
         if chr(int_val) in qualities_in_ascii:
             quality = int_val
         else:
-            #if by some chance it drops under lowest value give it the lowest value
+            # if by some chance it drops under lowest value give it the lowest value
             if int(33) > int_val > int(0):
                 quality = int(33)
             else:
-                #if it goes above the max value, give it max value
+                # if it goes above the max value, give it max value
                 if int_val > int(126):
                     quality = int(126)
                 else:
@@ -148,6 +150,7 @@ def mutate_genome(reference_genome, gen_read_data):
 
     return reference_genome
 
+
 # Utility checks
 def check_positive_value(value):
     if value < 0:
@@ -186,43 +189,43 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
     # block of checks
     if not file:
         print('Reference genome mast be defined!')
-        return
+        return ERROR
 
     if check_quality(average_quality) == 0:
         print('Quality mast be between 33 and 126')
-        return
+        return ERROR
 
     if check_coverage(coverage) == 0:
         print('Coverage mast be positive number')
-        return
+        return ERROR
 
     if check_positive_value(read_size) == 0:
         print('Read size mast be positive number')
-        return
+        return ERROR
 
     if check_positive_value(insert_size) == 0:
         print('Insert size mast be positive number')
-        return
+        return ERROR
 
     if read_size > insert_size:
         print('Read size can not be longer than insert size (size of the fragment of the genome)')
-        return
+        return ERROR
 
     if check_errors_values(delete_error_rate) == 0:
         print('Delete error mast be value between 0 and 1')
-        return
+        return ERROR
 
     if check_errors_values(insert_error_rate) == 0:
         print('Insert error mast be value between 0 and 1')
-        return
+        return ERROR
 
     if check_errors_values(snv_error_rate) == 0:
         print('SNV error mast be value between 0 and 1')
-        return
+        return ERROR
 
     if delete_error_rate + insert_error_rate + snv_error_rate > 1:
         print('Sum of error can not be greater than 1')
-        return
+        return ERROR
 
     # read the genome from fasta
     referent_genome = read_genome_from_fasta_file(file)
@@ -244,7 +247,6 @@ def sequence_simulator(file, average_quality, coverage, read_size, insert_size, 
     # Method which does all the reading and writing
     generate_reads(gen_read_data)
 
-
     end_time = time.time()
     print("Sequencing finished. Time elapsed: {}".format(end_time - start_time))
 
@@ -259,6 +261,7 @@ def generate_read(gen_read_data, read_start, read_end, direction):
     if direction == RIGHT:
         read = create_reverse_complement_genome(read)
     return read
+
 
 # Main method of the simulator
 def generate_reads(gen_read_data):
@@ -297,3 +300,96 @@ def generate_reads(gen_read_data):
     fastq1.close()
     fastq2.close()
     sam.close()
+
+
+def change_into_base(nucleotide):
+    number = random.randint(0, 100)
+
+    if nucleotide == 'R':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'A'
+
+    if nucleotide == 'Y':
+        rng = number % 2
+        if rng == 0:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'K':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'T'
+
+    if nucleotide == 'M':
+        rng = number % 2
+        if rng == 0:
+            return 'C'
+        else:
+            return 'A'
+
+    if nucleotide == 'S':
+        rng = number % 2
+        if rng == 0:
+            return 'G'
+        else:
+            return 'C'
+
+    if nucleotide == 'W':
+        rng = number % 2
+        if rng == 0:
+            return 'T'
+        else:
+            return 'A'
+
+    if nucleotide == 'B':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'D':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'A'
+
+    if nucleotide == 'H':
+        rng = number % 3
+        if rng == 0:
+            return 'A'
+        elif rng == 1:
+            return 'T'
+        else:
+            return 'C'
+
+    if nucleotide == 'V':
+        rng = number % 3
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'A'
+        else:
+            return 'C'
+
+    if nucleotide == 'N':
+        rng = number % 4
+        if rng == 0:
+            return 'G'
+        elif rng == 1:
+            return 'T'
+        elif rng == 2:
+            return 'C'
+        else:
+            return 'A'
