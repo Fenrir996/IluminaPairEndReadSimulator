@@ -1,0 +1,52 @@
+#!/usr/bin/python3.8
+
+import sys
+from main import sequence_simulator
+
+if len(sys.argv) < 2:
+    print("Not enough arguments, use --help for more information")
+    exit(0)
+
+if sys.argv[1] == "--help":
+    print("Ilumina Pair-End Read Simulator")
+    print("")
+    print("Usage:")
+    print("sequence_simulator fasta_file")
+    print("")
+    print("Optional parameters:")
+    print("-a average quality")
+    print("-c coverage")
+    print("-r read size")
+    print("-i insert size")
+    print("-ins insert error rate")
+    print("-del delete error rate")
+    print("-snv snv error rate")
+    exit(0)
+
+file_name = sys.argv[1]
+average_quality = 80
+coverage = 4
+read_size = 150
+insert_size = 500
+delete_error_rate = 0
+insert_error_rate = 0
+snv_error_rate = 0
+
+for i, arg in enumerate(sys.argv):
+    if arg == "-a":
+        average_quality = int(sys.argv[i + 1])
+    if arg == "-c":
+        coverage = int(sys.argv[i + 1])
+    if arg == "-r":
+        read_size = int(sys.argv[i + 1])
+    if arg == "-i":
+        insert_size = int(sys.argv[i + 1])
+    if arg == "-ins":
+        insert_error_rate = float(sys.argv[i + 1])
+    if arg == "-del":
+        delete_error_rate = float(sys.argv[i + 1])
+    if arg == "-snv":
+        snv_error_rate = float(sys.argv[i + 1])
+
+sequence_simulator(file_name, average_quality, coverage, read_size, insert_size, delete_error_rate,
+                   insert_error_rate, snv_error_rate)
